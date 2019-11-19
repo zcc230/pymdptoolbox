@@ -1022,7 +1022,7 @@ class QLearning(MDP):
 
     """
 
-    def __init__(self, transitions, reward, discount, n_iter=10000,
+    def __init__(self, transitions, reward, discount, n_iter=100000,
                  skip_check=False):
         # Initialise a Q-learning MDP.
 
@@ -1047,21 +1047,24 @@ class QLearning(MDP):
         # Initialisations
         self.Q = _np.zeros((self.S, self.A))
         self.mean_discrepancy = []
+        self.total_rewards = []
 
     def run(self):
         # Run the Q-learning algoritm.
         discrepancy = []
-
+        total_rewards = []
         self.time = _time.time()
 
         # initial state choice
         s = _np.random.randint(0, self.S)
-
+        R = 0
         for n in range(1, self.max_iter + 1):
 
             # Reinitialisation of trajectories every 100 transitions
             if (n % 100) == 0:
                 s = _np.random.randint(0, self.S)
+                self.total_rewards.append(R)
+                R = 0
 
             # Action choice : greedy with increasing probability
             # probability 1-(1/log(n+2)) can be changed
@@ -1087,7 +1090,7 @@ class QLearning(MDP):
                     r = self.R[s, a]
                 except IndexError:
                     r = self.R[s]
-
+            
             # Updating the value of Q
             # Decaying update coefficient (1/sqrt(n+2)) can be changed
             delta = r + self.discount * self.Q[s_new, :].max() - self.Q[s, a]
@@ -1096,7 +1099,7 @@ class QLearning(MDP):
 
             # current state is updated
             s = s_new
-
+            R += r
             # Computing and saving maximal values of the Q variation
             discrepancy.append(_np.absolute(dQ))
 
